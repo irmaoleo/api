@@ -59,7 +59,7 @@ async def login(userLogin: CreatedUserRequest):
 
         if bcrypt_context.verify(userLogin.password, founded_user["password"]):
 
-            expires = datetime.utcnow() + timedelta(days=5)
+            expires = datetime.utcnow() + timedelta(days=1)
 
             access_token = jwt.encode(
                 {"sub": founded_user["_id"], "exp": expires},

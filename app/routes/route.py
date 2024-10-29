@@ -3,15 +3,16 @@ from fastapi import APIRouter, Depends
 from fastapi.security import OAuth2PasswordBearer
 from bson import ObjectId
 
-from ..database import users_collections, mock_tests_collections
+from ..database import users_collections, mock_tests_collections, exams_collections
 from ..auth import validate_token
 
 from ..models.users import Users
 from ..models.mock_test import MockTestRequest
-from ..models.scores import ScoreRequest
+from ..models.scores import ScoreRequest, format_response_score, general_analytics
 
 from ..schemas.mock_test import individual_serial as MockTestSerial
 from ..schemas.users import individual_serial as UserSerial
+from ..schemas.exams import list_serial as ExamSerials
 
 from ..services.mock_test import build_mock_test, get_all_questions, submit_mock_test
 from ..services.score import save_question_score, get_mock_test_score, get_user_scores
@@ -49,33 +50,36 @@ async def update_user(user_data: Users, token: Annotated[str, Depends(oauth2_sch
 
 ## DASHBOARD
 @router.get("/dashboard")
-async def dashboard():
-    return {"message": "Welcome to the Exams API"}
+async def dashboard(token: Annotated[str, Depends(oauth2_scheme)]):
+    user_id = validate_token(token)
+    analytics = get_user_scores(user_id)
+    dashboard_data = general_analytics(analytics)
+    return {"data": dashboard_data }
 
 
 @router.get("/dashboard/history")
 async def dashboard(token: Annotated[str, Depends(oauth2_scheme)]):
     user_id = validate_token(token)
     analytics = get_user_scores(user_id)
-    return {"analytics": analytics }
+    dashboard_data = [format_response_score(x) for x in analytics ]
+    return {"data": dashboard_data }
 
 
 @router.get("/dashboard/history/{mock_test_id}")
 async def dashboard(mock_test_id: str, token: Annotated[str, Depends(oauth2_scheme)]):
     user_id = validate_token(token)
     analytics = get_mock_test_score(user_id, mock_test_id)
-    return {"analytics": analytics }
+    resposne = format_response_score(analytics)
+    return resposne
 
 
-@router.get("/dashboard/subjects/")
-async def dashboard():
-    return {"message": "Welcome to the Exams API"}
+## SUBJECTS AND EXAMS
 
-
-@router.get("/dashboard/subjects/{subject_name}")
-async def dashboard():
-    return {"message": "Welcome to the Exams API"}
-
+@router.get("/exams")
+async def get_exams(token: Annotated[str, Depends(oauth2_scheme)]):
+    validate_token(token)
+    exams = ExamSerials(exams_collections.find())
+    return {"exams": exams }
 
 ## MOCK TESTS
 @router.post("/start_mock_test")
@@ -83,7 +87,7 @@ async def create_mock_test(
     req: MockTestRequest, token: Annotated[str, Depends(oauth2_scheme)]
 ):
     user_id = validate_token(token)
-    created_mock_test = build_mock_test(user_id, req.exam_id, req.quantity, req.type)
+    created_mock_test = build_mock_test(user_id, req.exam_id, req.quantity, req.type, req.subjects)
 
     created_mock_test = mock_tests_collections.insert_one(created_mock_test)
 

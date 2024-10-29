@@ -2,7 +2,7 @@
 
 def individual_serial(exam) -> dict:
     return {
-        "_id": exam["_id"],
+        "_id": str(exam["_id"]),
         "exam_name": exam["exam_name"],
         "subjects_composition": exam["subjects_composition"],
         "duration": exam["duration"]

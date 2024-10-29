@@ -6,6 +6,7 @@ class MockTestRequest(BaseModel):
     exam_id: str
     quantity: int
     type: Literal["official", "reinforcement"]
+    subjects: list[str]
     
     
 

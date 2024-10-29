@@ -44,22 +44,36 @@ def shuffle_options(question):
     return question
 
 
-def build_mock_test(user_id: str, exam_id: str, question_quantity: int, type: str):
-
+def build_mock_test(user_id: str, exam_id: str, question_quantity: int, type: str, subjects: list[str]) -> dict:
     questions = []
 
+    # Busca o exame escolhido no banco de dados
     chosen_exam = exam_serial(exams_collections.find_one({"_id": ObjectId(exam_id)}))
 
-    for subject_name in chosen_exam["subjects_composition"]:
-        subject_percentual = chosen_exam["subjects_composition"][subject_name]
+    # Filtro para manter apenas as matérias da lista 'subjects', se ela não estiver vazia
+    if subjects:
+        selected_subjects = {
+            name: percentual
+            for name, percentual in chosen_exam["subjects_composition"].items()
+            if name in subjects
+        }
+    else:
+        selected_subjects = chosen_exam["subjects_composition"]
 
+    # Ajustar o percentual relativo para as matérias selecionadas
+    total_percentual = sum(selected_subjects.values())
+    adjusted_subjects = {
+        name: (percentual / total_percentual) * 100
+        for name, percentual in selected_subjects.items()
+    }
+
+    # Itera sobre cada matéria selecionada para escolher as questões
+    for subject_name, subject_percentual in adjusted_subjects.items():
         questions_in_mock = math.ceil((subject_percentual / 100) * question_quantity)
 
         pipeline = [
             {"$match": {"subject": subject_name}},  # Filtra pelo subject
-            {
-                "$sample": {"size": questions_in_mock}
-            },  # Seleciona aleatoriamente 'quantity' questões
+            {"$sample": {"size": questions_in_mock}},  # Seleciona questões aleatórias
             {"$project": {"_id": 1}},  # Retorna apenas o campo _id
         ]
 
@@ -69,6 +83,7 @@ def build_mock_test(user_id: str, exam_id: str, question_quantity: int, type: st
 
         questions.extend(questions_choosen)
 
+    # Retorna o mock test construído
     return {
         "type": type,
         "exam_model": chosen_exam["exam_name"],
