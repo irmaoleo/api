@@ -122,7 +122,7 @@ def format_response_score(data: Score) -> FormattedResponse:
     # Estrutura do resultado final para o frontend
     result = {
         "date": date,
-        "title": f"{'SIMULADO' if  mock_test_data["type"] == 'official' else 'REFORÇO'} {mock_test_data['exam_model'].upper()}",
+        "title": f"{'SIMULADO' if  mock_test_data['type'] == 'official' else 'REFORÇO'} {mock_test_data['exam_model'].upper()}",
         "summary": {
             "questions_answered": f"{correct_answers}/{total_questions}",
             "percentage_score": f"{score:.2f}%",
