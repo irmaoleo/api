@@ -57,16 +57,34 @@ def save_question_score(
     correct: bool,
 ):
     # Ver se já existe score para esse mock test, se não cria um novo
-
+    print('pré fonded_score')
     fonded_score = scores_collections.find_one({"mock_test_id": mock_test_id})
+    print('fonded_score')
+    print(fonded_score)
+
 
     if fonded_score is None:
 
         questions = [QuestionPerformance(question_id=question_id, correct=correct)]
+        
+        print('questions')
+        print(questions)
+        
 
         topic = TopicPerformance(topic_name=topic_name, questions=questions)
+        
+        print('topic')
+        print(topic)
+        
 
+        print('subject_name')
+        print(subject_name)
+        
         subject = SubjectPerformance(subject_name=subject_name, topics=[topic])
+        
+        print('subject')
+        print(subject)
+        
 
         score = Score(
             user_id=user_id,
@@ -76,6 +94,10 @@ def save_question_score(
             total_questions=len(questions),
             date=None,
         ).dict()
+        
+        print('score')
+        print(score)
+        
 
         result = scores_collections.insert_one(score)
 

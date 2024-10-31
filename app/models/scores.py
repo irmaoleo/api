@@ -68,20 +68,20 @@ class FormattedResponse(BaseModel):
     details: List[Subject]
 
 
-class SubjectPerformance(BaseModel):
+class SubjectPerformanceResponse(BaseModel):
     subject: str
     percentage: float
 
 
-class GeneralPerformance(BaseModel):
+class GeneralPerformanceResponse(BaseModel):
     answered: int
     correct: int
     errors: int
 
 
 class PerformanceResponse(BaseModel):
-    general_performance: GeneralPerformance
-    subject_performance: List[SubjectPerformance]
+    general_performance: GeneralPerformanceResponse
+    subject_performance: List[SubjectPerformanceResponse]
 
 
 def format_response_score(data: Score) -> FormattedResponse:

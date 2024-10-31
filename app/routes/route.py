@@ -143,7 +143,6 @@ async def answer_question(
 @router.post("/submit_test/{mock_test_id}")
 async def submit_test(mock_test_id: str, token: Annotated[str, Depends(oauth2_scheme)]):
     user_id = validate_token(token)
-
     analytics = submit_mock_test(user_id, mock_test_id)
     return {
         "message": f"Score submitted successfully for user {user_id} on exam {mock_test_id}",

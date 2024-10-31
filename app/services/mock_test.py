@@ -114,10 +114,16 @@ def submit_mock_test(user_id: str, mock_test_id: str):
     mock_test = mock_test_serial(
         mock_tests_collections.find_one({"_id": ObjectId(mock_test_id)})
     )
+    
+    
+    
 
     score = score_serial(
         scores_collections.find_one({"user_id": user_id, "mock_test_id": mock_test_id})
     )
+    
+    print('score')
+    print(score)
 
     ## atualizar score
 
