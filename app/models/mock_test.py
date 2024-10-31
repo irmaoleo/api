@@ -8,6 +8,8 @@ class MockTestRequest(BaseModel):
     type: Literal["official", "reinforcement"]
     subjects: list[str]
     
+class ReportRequest(BaseModel):
+    message: str
     
 
     

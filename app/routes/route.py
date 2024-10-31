@@ -3,11 +3,11 @@ from fastapi import APIRouter, Depends
 from fastapi.security import OAuth2PasswordBearer
 from bson import ObjectId
 
-from ..database import users_collections, mock_tests_collections, exams_collections
+from ..database import users_collections, mock_tests_collections, exams_collections, reports_collection
 from ..auth import validate_token
 
 from ..models.users import Users
-from ..models.mock_test import MockTestRequest
+from ..models.mock_test import MockTestRequest, ReportRequest
 from ..models.scores import ScoreRequest, format_response_score, general_analytics
 
 from ..schemas.mock_test import individual_serial as MockTestSerial
@@ -73,13 +73,22 @@ async def dashboard(mock_test_id: str, token: Annotated[str, Depends(oauth2_sche
     return resposne
 
 
-## SUBJECTS AND EXAMS
+## SUBJECTS AND EXAMAS AND REPORTS
 
 @router.get("/exams")
 async def get_exams(token: Annotated[str, Depends(oauth2_scheme)]):
     validate_token(token)
     exams = ExamSerials(exams_collections.find())
     return {"exams": exams }
+
+@router.post("/report/{question_id}")
+async def get_exams(req: ReportRequest, question_id: str, token: Annotated[str, Depends(oauth2_scheme)]):
+    validate_token(token)
+    response = reports_collection.insert_one({
+        "question_id": question_id,
+        "message": req.message
+    })
+    return {"report": True, "report_id": str(response.inserted_id) }
 
 ## MOCK TESTS
 @router.post("/start_mock_test")

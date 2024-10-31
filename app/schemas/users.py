@@ -2,7 +2,7 @@
 def individual_serial(user) -> dict:
     return {
         "_id": str(user["_id"]),
-        "name": user["name"],
+        "fullName": user["fullName"],
         "email": user["email"],
         "password": user["password"]
     }

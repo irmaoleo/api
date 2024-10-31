@@ -41,7 +41,7 @@ async def create_user(user: CreatedUserRequest):
     else:
 
         hashed_password = bcrypt_context.hash(user.password)
-        user_dict = {"email": user.email, "password": hashed_password, "name": ""}
+        user_dict = {"email": user.email, "password": hashed_password, "fullName": ""}
 
         users_collections.insert_one(user_dict)
 
@@ -58,14 +58,19 @@ async def login(userLogin: CreatedUserRequest):
         founded_user = individual_serial(user)
 
         if bcrypt_context.verify(userLogin.password, founded_user["password"]):
+    
 
             expires = datetime.utcnow() + timedelta(days=1)
+
+
 
             access_token = jwt.encode(
                 {"sub": founded_user["_id"], "exp": expires},
                 SECRET_KEY,
                 algorithm=ALGORITHM,
-            )
+            )  
+            
+            print('veio até aqui')
 
             return {"access_token": access_token, "token_type": "bearer"}  # or JWT
 

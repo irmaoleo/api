@@ -13,4 +13,5 @@ questions_collections = db["questions"]
 scores_collections = db["scores"]
 subjects_collections = db["subjects"]
 users_collections = db["users"]
+reports_collection = db["reports"]
 
