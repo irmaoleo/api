@@ -41,7 +41,15 @@ async def create_user(user: CreatedUserRequest):
     else:
 
         hashed_password = bcrypt_context.hash(user.password)
-        user_dict = {"email": user.email, "password": hashed_password, "fullName": ""}
+        user_dict = {
+            "email": user.email, 
+            "password": hashed_password, 
+            "fullName": "", 
+            "birthDate": "", 
+            "postalCode": "", 
+            "gender": ""
+            }
+    
 
         users_collections.insert_one(user_dict)
 
