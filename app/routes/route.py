@@ -27,7 +27,12 @@ oauth2_scheme = OAuth2PasswordBearer(tokenUrl="token")
 @router.get("/user", response_model=Users)
 async def get_user(token: Annotated[str, Depends(oauth2_scheme)]):
     user_id = validate_token(token)
-    user = UserSerial(users_collections.find_one({"_id": ObjectId(user_id)}))
+
+    response = users_collections.find_one({"_id": ObjectId(user_id)})
+
+    user = UserSerial(response)
+
+
     if user is None:
         return {"message": "User not found"}
 

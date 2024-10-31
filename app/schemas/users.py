@@ -4,7 +4,10 @@ def individual_serial(user) -> dict:
         "_id": str(user["_id"]),
         "fullName": user["fullName"],
         "email": user["email"],
-        "password": user["password"]
+        "password": user["password"],
+        "birthDate": user["birthDate"],
+        "postalCode": user["postalCode"],
+        "gender": user["gender"]
     }
 
 
