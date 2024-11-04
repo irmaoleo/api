@@ -118,8 +118,6 @@ def submit_mock_test(user_id: str, mock_test_id: str):
     )
     
     
-    
-    
     mocktest_score = scores_collections.find_one({"user_id": user_id, "mock_test_id": mock_test_id})
 
     if mocktest_score == None:
@@ -128,7 +126,7 @@ def submit_mock_test(user_id: str, mock_test_id: str):
             mock_test_id=mock_test_id,
             performance=[],
             overall_score=None,
-            total_questions=len([]),
+            total_questions=len(mock_test['questions']),
             date=None,
         ).dict()
         

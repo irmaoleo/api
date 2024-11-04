@@ -86,6 +86,7 @@ class PerformanceResponse(BaseModel):
 
 def format_response_score(data: Score) -> FormattedResponse:
     # Extrai as informações principais
+
     date = datetime.strptime(data["date"], "%Y-%m-%d").strftime("%d de %B de %Y")
 
     # Contabiliza o total de acertos
@@ -96,6 +97,7 @@ def format_response_score(data: Score) -> FormattedResponse:
         for question in topic["questions"]
         if question["correct"]
     )
+
 
     total_questions = data["total_questions"]
     score = data["overall_score"]

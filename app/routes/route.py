@@ -63,7 +63,7 @@ async def update_user(user_data: Users, token: Annotated[str, Depends(oauth2_sch
 @router.get("/dashboard")
 async def dashboard(token: Annotated[str, Depends(oauth2_scheme)]):
     user_id = validate_token(token)
-    analytics = get_user_scores(user_id)
+    analytics = get_user_scores(user_id, True)
     dashboard_data = general_analytics(analytics)
     return {"data": dashboard_data }
 
@@ -71,7 +71,8 @@ async def dashboard(token: Annotated[str, Depends(oauth2_scheme)]):
 @router.get("/dashboard/history")
 async def dashboard(token: Annotated[str, Depends(oauth2_scheme)]):
     user_id = validate_token(token)
-    analytics = get_user_scores(user_id)
+    analytics = get_user_scores(user_id, False)
+    
     dashboard_data = [format_response_score(x) for x in analytics ]
     return {"data": dashboard_data }
 

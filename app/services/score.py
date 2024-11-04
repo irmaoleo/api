@@ -1,9 +1,9 @@
 from bson import ObjectId
 
-from ..database import scores_collections
+from ..database import scores_collections, mock_tests_collections
 
 from ..schemas.scores import individual_serial as ScoreSerial, list_serial as ScoreListSerial
-
+from ..schemas.mock_test import individual_serial as MockTestSerial
 
 from ..models.scores import (
     Score,
@@ -57,46 +57,32 @@ def save_question_score(
     correct: bool,
 ):
     # Ver se já existe score para esse mock test, se não cria um novo
-    print('pré fonded_score')
     fonded_score = scores_collections.find_one({"mock_test_id": mock_test_id})
-    print('fonded_score')
-    print(fonded_score)
-
+    
+    mock_test = MockTestSerial(mock_tests_collections.find_one({"_id": ObjectId(mock_test_id)}))
 
     if fonded_score is None:
 
         questions = [QuestionPerformance(question_id=question_id, correct=correct)]
-        
-        print('questions')
-        print(questions)
+    
         
 
         topic = TopicPerformance(topic_name=topic_name, questions=questions)
         
-        print('topic')
-        print(topic)
-        
 
-        print('subject_name')
-        print(subject_name)
         
         subject = SubjectPerformance(subject_name=subject_name, topics=[topic])
-        
-        print('subject')
-        print(subject)
-        
+
 
         score = Score(
             user_id=user_id,
             mock_test_id=mock_test_id,
             performance=[subject],
             overall_score=None,
-            total_questions=len(questions),
+            total_questions=len(mock_test['questions']),
             date=None,
         ).dict()
         
-        print('score')
-        print(score)
         
 
         result = scores_collections.insert_one(score)
@@ -126,6 +112,18 @@ def get_mock_test_score(user_id: str, mock_test_id: str) -> Score:
 
     return ScoreSerial(score) if score else None
 
-def get_user_scores(user_id: str) -> list:
-    scores = scores_collections.find({"user_id": user_id})
+def get_user_scores(user_id: str, official: bool) -> list:
+    
+    if (official):
+        mock_tests = mock_tests_collections.find({
+            "user_id": user_id,
+            "type": "official"
+        },  {"_id": 1} )
+        ids = [doc["_id"] for doc in mock_tests]
+
+    
+        scores = scores_collections.find({"_id": {"$in": ids}})
+    else:
+        scores = scores_collections.find({"user_id": user_id})
+    
     return ScoreListSerial(scores)
