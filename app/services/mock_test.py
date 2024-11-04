@@ -15,6 +15,8 @@ from ..schemas.questions import individual_serial as question_serial
 from ..schemas.mock_test import individual_serial as mock_test_serial
 from ..schemas.scores import individual_serial as score_serial
 
+from ..models.scores import Score
+
 
 def shuffle_options(question):
     # Extrai as opções originais e a chave correta original
@@ -117,13 +119,29 @@ def submit_mock_test(user_id: str, mock_test_id: str):
     
     
     
+    
+    mocktest_score = scores_collections.find_one({"user_id": user_id, "mock_test_id": mock_test_id})
 
+    if mocktest_score == None:
+        mocktest_score = Score(
+            user_id=user_id,
+            mock_test_id=mock_test_id,
+            performance=[],
+            overall_score=None,
+            total_questions=len([]),
+            date=None,
+        ).dict()
+        
+        result = scores_collections.insert_one(mocktest_score)
+        
+        mocktest_score["_id"] = str(result.inserted_id)
+
+
+    
     score = score_serial(
-        scores_collections.find_one({"user_id": user_id, "mock_test_id": mock_test_id})
+        mocktest_score
     )
     
-    print('score')
-    print(score)
 
     ## atualizar score
 
@@ -134,9 +152,14 @@ def submit_mock_test(user_id: str, mock_test_id: str):
         for question in topic["questions"]
         if question["correct"]
     )
+ 
+
 
     total_questions = score["total_questions"]
-    overall_score = round((correct_answers / total_questions) * 100, 2)
+    if total_questions == 0:
+        overall_score = 0
+    else:    
+        overall_score = round((correct_answers / total_questions) * 100, 2)
 
     score["overall_score"] = overall_score
     score["date"] = datetime.now().strftime("%Y-%m-%d")

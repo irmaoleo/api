@@ -4,7 +4,7 @@ from fastapi.security import OAuth2PasswordBearer
 from bson import ObjectId
 
 from ..database import users_collections, mock_tests_collections, exams_collections, reports_collection
-from ..auth import validate_token
+from ..auth import validate_token, bcrypt_context
 
 from ..models.users import Users
 from ..models.mock_test import MockTestRequest, ReportRequest
@@ -16,6 +16,7 @@ from ..schemas.exams import list_serial as ExamSerials
 
 from ..services.mock_test import build_mock_test, get_all_questions, submit_mock_test
 from ..services.score import save_question_score, get_mock_test_score, get_user_scores
+
 
 
 router = APIRouter()
@@ -43,6 +44,11 @@ async def get_user(token: Annotated[str, Depends(oauth2_scheme)]):
 @router.patch("/user", response_model=Users)
 async def update_user(user_data: Users, token: Annotated[str, Depends(oauth2_scheme)]):
     user_id = validate_token(token)
+
+    if (user_data.password):
+        hashed_password = bcrypt_context.hash(user_data.password)
+        user_data.password = hashed_password
+        
     user = users_collections.find_one_and_update(
         {"_id": ObjectId(user_id)},
         {"$set": user_data.dict(exclude_unset=True)},

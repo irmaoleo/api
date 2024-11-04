@@ -78,7 +78,6 @@ async def login(userLogin: CreatedUserRequest):
                 algorithm=ALGORITHM,
             )  
             
-            print('veio até aqui')
 
             return {"access_token": access_token, "token_type": "bearer"}  # or JWT
 
