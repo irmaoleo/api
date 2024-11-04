@@ -154,10 +154,8 @@ def submit_mock_test(user_id: str, mock_test_id: str):
 
 
     total_questions = score["total_questions"]
-    if total_questions == 0:
-        overall_score = 0
-    else:    
-        overall_score = round((correct_answers / total_questions) * 100, 2)
+  
+    overall_score = round((correct_answers / total_questions) * 100, 2)
 
     score["overall_score"] = overall_score
     score["date"] = datetime.now().strftime("%Y-%m-%d")

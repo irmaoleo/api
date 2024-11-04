@@ -147,6 +147,14 @@ def format_response_score(data: Score) -> FormattedResponse:
             for subject in data["performance"]
         ],
     }
+    
+    print({
+        "summary": {
+            "questions_answered": f"{correct_answers}/{total_questions}",
+            "percentage_score": f"{score:.2f}%",
+            "time_taken": f"{minutes}:{seconds}",  # Isso pode ser calculado se você tiver o tempo inicial e final
+        }
+    })
 
     return result
 

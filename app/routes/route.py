@@ -64,6 +64,7 @@ async def update_user(user_data: Users, token: Annotated[str, Depends(oauth2_sch
 async def dashboard(token: Annotated[str, Depends(oauth2_scheme)]):
     user_id = validate_token(token)
     analytics = get_user_scores(user_id, True)
+    
     dashboard_data = general_analytics(analytics)
     return {"data": dashboard_data }
 

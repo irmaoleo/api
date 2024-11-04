@@ -119,10 +119,13 @@ def get_user_scores(user_id: str, official: bool) -> list:
             "user_id": user_id,
             "type": "official"
         },  {"_id": 1} )
-        ids = [doc["_id"] for doc in mock_tests]
+        ids = [str(doc["_id"]) for doc in mock_tests]
+        
+
 
     
-        scores = scores_collections.find({"_id": {"$in": ids}})
+        scores = scores_collections.find({"mock_test_id": {"$in": ids}})
+        
     else:
         scores = scores_collections.find({"user_id": user_id})
     
