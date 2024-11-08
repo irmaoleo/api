@@ -1,4 +1,5 @@
 from bson import ObjectId
+from datetime import datetime
 
 from ..database import scores_collections, mock_tests_collections
 
@@ -42,9 +43,6 @@ def update_score(
     question = QuestionPerformance(question_id=question_id, correct=correct).dict()
     topic["questions"].append(question)
 
-    # Atualiza o total de questões
-    score_data["total_questions"] += 1
-
     return score_data
 
 
@@ -78,13 +76,13 @@ def save_question_score(
             user_id=user_id,
             mock_test_id=mock_test_id,
             performance=[subject],
-            overall_score=None,
+            overall_score=0,
             total_questions=len(mock_test['questions']),
-            date=None,
+            date=str(datetime.utcnow().date()),
         ).dict()
         
         
-
+        
         result = scores_collections.insert_one(score)
 
         score["_id"] = str(result.inserted_id)
@@ -109,7 +107,7 @@ def save_question_score(
 
 def get_mock_test_score(user_id: str, mock_test_id: str) -> Score:
     score = scores_collections.find_one({"user_id": user_id, "mock_test_id": mock_test_id})
-
+    
     return ScoreSerial(score) if score else None
 
 def get_user_scores(user_id: str, official: bool) -> list:

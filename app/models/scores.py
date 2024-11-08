@@ -86,7 +86,7 @@ class PerformanceResponse(BaseModel):
 
 def format_response_score(data: Score) -> FormattedResponse:
     # Extrai as informações principais
-
+    
     date = datetime.strptime(data["date"], "%Y-%m-%d").strftime("%d de %B de %Y")
 
     # Contabiliza o total de acertos
@@ -97,6 +97,15 @@ def format_response_score(data: Score) -> FormattedResponse:
         for question in topic["questions"]
         if question["correct"]
     )
+    
+    answered_questions = sum(
+        1
+        for subject in data["performance"]
+        for topic in subject["topics"]
+        for question in topic["questions"]
+        if question
+    )
+
 
 
     total_questions = data["total_questions"]
@@ -126,7 +135,7 @@ def format_response_score(data: Score) -> FormattedResponse:
         "date": date,
         "title": f"{'SIMULADO' if  mock_test_data['type'] == 'official' else 'REFORÇO'} {mock_test_data['exam_model'].upper()}",
         "summary": {
-            "questions_answered": f"{correct_answers}/{total_questions}",
+            "questions_answered": f"{answered_questions}/{total_questions}",
             "percentage_score": f"{score:.2f}%",
             "time_taken": f"{minutes}:{seconds}",  # Isso pode ser calculado se você tiver o tempo inicial e final
         },
@@ -148,13 +157,6 @@ def format_response_score(data: Score) -> FormattedResponse:
         ],
     }
     
-    print({
-        "summary": {
-            "questions_answered": f"{correct_answers}/{total_questions}",
-            "percentage_score": f"{score:.2f}%",
-            "time_taken": f"{minutes}:{seconds}",  # Isso pode ser calculado se você tiver o tempo inicial e final
-        }
-    })
 
     return result
 

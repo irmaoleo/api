@@ -92,7 +92,7 @@ def build_mock_test(user_id: str, exam_id: str, question_quantity: int, type: st
         "user_id": user_id,
         "questions": questions,
         "start_time": datetime.now().isoformat(),
-        "end_time": None,
+        "end_time": datetime.now().isoformat(),
     }
 
 
@@ -125,10 +125,13 @@ def submit_mock_test(user_id: str, mock_test_id: str):
             user_id=user_id,
             mock_test_id=mock_test_id,
             performance=[],
-            overall_score=None,
+            overall_score=0,
             total_questions=len(mock_test['questions']),
-            date=None,
+            date=str(datetime.utcnow().date()),
         ).dict()
+        
+
+        
         
         result = scores_collections.insert_one(mocktest_score)
         
@@ -169,8 +172,10 @@ def submit_mock_test(user_id: str, mock_test_id: str):
     ## atualizar mock_test
 
     mock_test["end_time"] = datetime.now().isoformat()
-
+    
     del mock_test["_id"]
+
+
 
     mock_tests_collections.update_one(
         {"_id": ObjectId(mock_test_id)}, {"$set": mock_test}

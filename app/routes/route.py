@@ -82,6 +82,7 @@ async def dashboard(token: Annotated[str, Depends(oauth2_scheme)]):
 async def dashboard(mock_test_id: str, token: Annotated[str, Depends(oauth2_scheme)]):
     user_id = validate_token(token)
     analytics = get_mock_test_score(user_id, mock_test_id)
+
     resposne = format_response_score(analytics)
     return resposne
 
