@@ -1,96 +1,86 @@
-# from fastapi import APIRouter, HTTPException, Query
-# import mercadopago
+import os
+import stripe
+import json
+from fastapi import APIRouter, HTTPException, Header, Request
+from .services.emails import send_email
+from .auth import create_user, CreatedUserRequest
 
-# router = APIRouter(prefix="/payments", tags=["payments"])
+import json
+import random
+import string
 
-# # Inicialize o SDK do Mercado Pago
-# sdk = mercadopago.SDK(
-#     # "TEST-6105177808729772-102510-24a147b585383316aa2feafb4f1e30c5-1001701819"
-#     "APP_USR-6105177808729772-102510-710cb7afdbd0237b851354d95ec18dbb-1001701819"
-# )
+def password_generator():
+    caracteres = string.ascii_letters + string.digits  # Letras maiúsculas, minúsculas e números
+    senha = ''.join(random.choice(caracteres) for _ in range(6))  # Gera uma senha de 6 caracteres
+    return senha
 
-
-# @router.post("/create_checkout")
-# async def create_checkout():
-#     # Definindo os planos mensal e anual como opções no checkout
-#     preference_data = {
-#         "items": [
-#             # {
-#             #     "title": "Assinatura Mensal - R$27,90",
-#             #     "quantity": 1,
-#             #     "currency_id": "BRL",
-#             #     "unit_price": 27.90,
-#             # },
-#             # {
-#             #     "title": "Assinatura Anual - R$19,90/mês",
-#             #     "quantity": 1,
-#             #     "currency_id": "BRL",
-#             #     "unit_price": 238.80,
-#             # },
-#             {
-#                 "title": "Assinatura 12 Meses - R$27,90/mês",
-#                 "quantity": 1,
-#                 "currency_id": "BRL",
-#                 "unit_price": 1.1,
-#             },
-#         ],
-#         "back_urls": {
-#             "success": "https://firetest.com.br",
-#             "failure": "https://firetest.com.br",
-#             "pending": "https://firetest.com.br",
-#         },
-#         "notification_url": "https://badb-2804-214-8021-8ed4-bc0d-c988-da77-1044.ngrok-free.app/payments/webhook",
-#         "auto_return": "approved",
-#     }
-
-#     # Cria a preferência de pagamento
-#     preference_response = sdk.preference().create(preference_data)
-#     preference = preference_response["response"]
-
-#     # Retorna o link para o checkout
-#     return {"checkout_url": preference["init_point"]}
-
-
-# @router.post("/webhook")
-# async def mercadopago_webhook(id: str = Query(...), topic: str = Query(...)):
-#     """Webhook do Mercado Pago: Lida com diferentes tópicos de notificação."""
-#     # try:
-#     #     print(f"Notificação recebida - ID: {id}, Tópico: {topic}")
-
-#     #     # Verifique se a notificação é sobre uma ordem de pagamento
-#     #     if topic == "merchant_order":
-#     #         # Consulta a ordem de pagamento usando o SDK
-#     #         merchant_order = sdk.merchant_order().get(id)
-            
-#     #         print('merchant_order')
-#     #         print(merchant_order)
-
-
-#     #         # Extrai informações da ordem
-#     #         response = merchant_order["response"]
-#     #         print('response')
-#     #         print(response)
-#     #         if response.get("status") == "opened":
-#     #             payments = response.get("payments", [])
-#     #             for payment in payments:
-#     #                 if payment["status"] == "approved":
-#     #                     payer = payment.get("payer", {})
-#     #                     nome_comprador = (
-#     #                         payer.get("first_name", "")
-#     #                         + " "
-#     #                         + payer.get("last_name", "")
-#     #                     )
-#     #                     email_comprador = payer.get("email", "")
-
-#     #                     print(
-#     #                         f"Pagamento aprovado! Nome: {nome_comprador}, Email: {email_comprador}"
-#     #                     )
-#     #                     # Aqui você pode liberar o acesso ao cliente no sistema
-
-#     #     return {"status": "ok"}
-
-#     # except Exception as e:
-#     #     print(f"Erro: {str(e)}")
-#     #     raise HTTPException(status_code=400, detail="Erro ao processar a notificação")
+async def extract_transaction_details(byte_data: bytes) -> dict:
+    # Converte os bytes para uma string JSON e, em seguida, para um dicionário
+    json_string = byte_data.decode("utf-8")
+    data = json.loads(json_string)
     
-#     payer_id = '1361916851'
+    # Extração das informações necessárias
+    try:
+        # Navega pelo dicionário para extrair os campos desejados
+        customer_email = data["data"]["object"].get("customer_email")
+        customer_name = data["data"]["object"].get("customer_name")
+        customer_phone = data["data"]["object"].get("customer_phone")
+        status = data["data"]["object"].get("status")
+
+        # Verifica o status da transação
+        transaction_status = True if status == "paid" else False
+        
+        # Retorna o dicionário com as informações extraídas
+        
+        password = password_generator()
+        
+        create_user_payload = CreatedUserRequest(email=customer_email, password=password)
+        
+        if transaction_status == True:
+            await create_user(create_user_payload)
+            
+            send_email({
+            "email": customer_email,
+            "password": password,
+            "full_name": customer_name}, "liberando acesso")
+        else:
+             send_email({
+            "email": customer_email,
+            "full_name": customer_name}, "compra não efetuada")
+        
+        return {
+            "email": customer_email,
+            "nome_completo": customer_name,
+            "telefone": customer_phone,
+            "status": transaction_status
+        }
+    except KeyError as e:
+        print(f"Erro ao extrair dados: chave {e} não encontrada.")
+        # Retorna um dicionário indicando erro caso alguma chave não seja encontrada
+        return {
+            "email": None,
+            "nome_completo": None,
+            "telefone": None,
+            "status": "Erro ao processar transação"
+        }
+
+
+
+
+
+
+
+
+router = APIRouter(prefix="/payments", tags=["payments"])
+
+@router.post("/webhook")
+async def stripe_webhook(request: Request, stripe_signature: str = Header(None)):
+    payload = await request.body()
+    # result = extract_event_details(payload)
+    
+    print('payload')
+    payload_dict = await extract_transaction_details(payload)
+    
+    print(payload_dict)
+        
+        
