@@ -4,15 +4,11 @@ import json
 from fastapi import APIRouter, HTTPException, Header, Request
 from .services.emails import send_email
 from .auth import create_user, CreatedUserRequest
+from .services.password import password_generator
 
 import json
-import random
-import string
 
-def password_generator():
-    caracteres = string.ascii_letters + string.digits  # Letras maiúsculas, minúsculas e números
-    senha = ''.join(random.choice(caracteres) for _ in range(6))  # Gera uma senha de 6 caracteres
-    return senha
+
 
 async def extract_transaction_details(byte_data: bytes) -> dict:
     # Converte os bytes para uma string JSON e, em seguida, para um dicionário

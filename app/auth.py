@@ -8,6 +8,8 @@ from jose import JWTError, jwt
 
 from .database import users_collections
 from .schemas.users import individual_serial
+from .services.password import password_generator
+from .services.emails import send_email
 
 
 router = APIRouter(prefix="/auth", tags=["auth"])
@@ -27,7 +29,9 @@ class CreatedUserRequest(BaseModel):
 class Token(BaseModel):
     acess_token: str
     token_type: str
-
+    
+class ResetPasswordRequest(BaseModel):
+    email: str
 
 @router.post("/", status_code=status.HTTP_201_CREATED)
 async def create_user(user: CreatedUserRequest):
@@ -89,6 +93,33 @@ async def login(userLogin: CreatedUserRequest):
             status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid credentials"
         )
 
+@router.post('/reset', status_code=status.HTTP_200_OK)
+async def reset_password(user: ResetPasswordRequest):
+    user_with_email = users_collections.find_one({"email": user.email})
+
+    if user_with_email is None:
+        return HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND, detail="User not found"
+        )
+    else:
+        
+        # criar nova senha
+       
+        new_password = password_generator()
+        hashed_password = bcrypt_context.hash(new_password)  
+        users_collections.update_one({"email": user.email}, {"$set": {"password": hashed_password}})
+        # enviar para o usuario
+        
+        send_email({
+            "email": user.email,
+            "password": new_password,
+            "full_name": ""  # or user_with_email["fullName"]
+            }, "nova senha")
+        
+        
+
+        return {"message": "Password reset successfully"}
+    
 
 def validate_token(token: str):
     try:

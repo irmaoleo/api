@@ -2,7 +2,7 @@ import smtplib
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
 
-from .email_templates.index import render_succed_email
+from .email_templates.index import render_succed_email, render_recovered_email
 
 def send_email(dados_usuario, tipo_email):
     # Configurações do email remetente
@@ -18,6 +18,12 @@ def send_email(dados_usuario, tipo_email):
     if tipo_email == "liberando acesso":
         assunto = "👨‍💻Acesso ao APP Firetest Liberado"
         corpo_email = render_succed_email({
+            "email": email_destinatario,
+            "password": password_destinatario
+        })
+    elif tipo_email == "nova senha":
+        assunto = "🔑 Recuperando acesso"
+        corpo_email = render_recovered_email({
             "email": email_destinatario,
             "password": password_destinatario
         })
